@@ -22,7 +22,8 @@ services:
   api:
     build: .
     command: >
-      sh -c "python manage.py migrate &&
+      sh -c "python manage.py makemigrations clients &&
+             python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app          # hot reload — le code local est monté dans le conteneur
