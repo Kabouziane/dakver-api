@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import path, reverse
 from django.utils import timezone
@@ -77,6 +78,9 @@ class ClientAdmin(admin.ModelAdmin):
     search_fields  = ['user__email', 'user__first_name', 'user__last_name', 'company_name', 'phone']
     readonly_fields = ['created_at', 'balance_display', 'unpaid_display']
 
+    def has_add_permission(self, request):
+        return False  # auto-créé par le signal post_save sur User
+
     def balance_display(self, obj):
         b = obj.balance
         color = '#16a34a' if b >= 0 else '#dc2626'
@@ -119,7 +123,7 @@ class DevisAdmin(admin.ModelAdmin):
 
     # ── PDF download view ──
     def download_pdf(self, request, pk):
-        devis = Devis.objects.prefetch_related('lignes').get(pk=pk)
+        devis = get_object_or_404(Devis.objects.prefetch_related('lignes'), pk=pk)
         pdf_bytes = _render_pdf('pdf/devis.html', _pdf_context(devis))
         devis.pdf_file.save(f"{devis.reference}.pdf", ContentFile(pdf_bytes), save=True)
         return _pdf_response(pdf_bytes, f"{devis.reference}.pdf")
@@ -197,14 +201,14 @@ class FactureAdmin(admin.ModelAdmin):
         return custom + urls
 
     def download_pdf(self, request, pk):
-        facture = Facture.objects.prefetch_related('lignes').get(pk=pk)
+        facture = get_object_or_404(Facture.objects.prefetch_related('lignes'), pk=pk)
         pdf_bytes = _render_pdf('pdf/facture.html', _pdf_context(facture))
         facture.pdf_file.save(f"{facture.reference}.pdf", ContentFile(pdf_bytes), save=True)
         return _pdf_response(pdf_bytes, f"{facture.reference}.pdf")
 
     def mark_paid_view(self, request, pk):
         from django.shortcuts import redirect
-        facture = Facture.objects.get(pk=pk)
+        facture = get_object_or_404(Facture, pk=pk)
         facture.mark_as_paid()
         self.message_user(request, f"{facture.reference} marquée comme payée.")
         return redirect(reverse('admin:clients_facture_changelist'))
@@ -293,8 +297,11 @@ class CompteTransactionAdmin(admin.ModelAdmin):
     search_fields = ['label', 'client__user__email']
     readonly_fields = ['balance_after', 'date']
 
+    def has_add_permission(self, request):
+        return False  # utiliser CompteTransaction.add() — pas la création manuelle
+
     def has_change_permission(self, request, obj=None):
-        return False  # Les transactions ne peuvent pas être modifiées
+        return False  # les transactions sont immuables
 
     def amount_display(self, obj):
         color = '#16a34a' if obj.amount >= 0 else '#dc2626'

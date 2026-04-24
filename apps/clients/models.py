@@ -183,6 +183,8 @@ class Facture(models.Model):
 
     @property
     def is_overdue(self):
+        if self.status == self.STATUS_OVERDUE:
+            return True
         return self.status == self.STATUS_PENDING and self.due_date < timezone.now().date()
 
     def mark_as_paid(self):
