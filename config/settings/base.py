@@ -163,14 +163,14 @@ FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 
 # ─── Company info (used in PDF templates) ────────────────────────────────────
 COMPANY = {
-    'name': 'ToitureVerte',
-    'address': 'Rue de la Verdure 42',
-    'city': '1000 Bruxelles',
+    'name':    config('COMPANY_NAME',    default='ToitureVerte SRL'),
+    'address': config('COMPANY_ADDRESS', default=''),
+    'city':    config('COMPANY_CITY',    default=''),
     'country': 'Belgique',
-    'phone': '+32 2 555 12 34',
-    'email': 'info@toitureverte.be',
-    'website': 'www.toitureverte.be',
-    'vat': 'BE 0123.456.789',
-    'iban': 'BE68 5390 0754 7034',
-    'bic': 'TRIOBEBB',
+    'phone':   config('COMPANY_PHONE',   default=''),
+    'email':   config('COMPANY_EMAIL',   default=''),
+    'website': config('COMPANY_WEBSITE', default='www.toitureverte.be'),
+    'vat':     config('COMPANY_VAT',     default=''),
+    'iban':    config('COMPANY_IBAN',    default=''),
+    'bic':     config('COMPANY_BIC',     default=''),
 }
