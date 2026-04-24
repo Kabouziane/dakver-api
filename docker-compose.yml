@@ -1,0 +1,48 @@
+# Environnement de DÉVELOPPEMENT
+# Usage : docker compose up
+# L'API tourne avec le dev server Django (hot reload), Postgres en conteneur
+
+services:
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: toitureverte
+      POSTGRES_USER: toitureverte
+      POSTGRES_PASSWORD: devpassword
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U toitureverte"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app          # hot reload — le code local est monté dans le conteneur
+      - media:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      SECRET_KEY: dev-secret-key-change-in-prod
+      DB_NAME: toitureverte
+      DB_USER: toitureverte
+      DB_PASSWORD: devpassword
+      DB_HOST: db          # nom du service Docker, pas localhost
+      DB_PORT: "5432"
+      CORS_ALLOWED_ORIGINS: "http://localhost:3000"
+      FRONTEND_URL: "http://localhost:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  media:
