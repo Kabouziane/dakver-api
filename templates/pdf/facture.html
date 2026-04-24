@@ -1,0 +1,162 @@
+{% extends "pdf/base.html" %}
+{% block content %}
+
+<div class="header">
+  <div class="logo-block">
+    <div class="logo-name">ToitureVerte</div>
+    <div class="logo-tagline">Spécialiste Toiture Verte · Bruxelles &amp; Belgique</div>
+  </div>
+  <div class="doc-type-block">
+    <div class="doc-type">FACTURE</div>
+    <div class="doc-ref">{{ obj.reference }}</div>
+  </div>
+</div>
+
+<div class="company-bar">
+  <span>📞 {{ company.phone }}</span>
+  <span>✉ {{ company.email }}</span>
+  <span>🌐 {{ company.website }}</span>
+  <span>📍 {{ company.address }}, {{ company.city }}</span>
+</div>
+
+<div class="body">
+
+  <!-- Parties -->
+  <div class="parties">
+    <div class="party">
+      <div class="party-label">Émis par</div>
+      <div class="party-name">{{ company.name }}</div>
+      <div class="party-line">{{ company.address }}</div>
+      <div class="party-line">{{ company.city }}</div>
+      <div class="party-line">TVA : {{ company.vat }}</div>
+      <div class="party-line">IBAN : {{ company.iban }}</div>
+    </div>
+    <div class="party">
+      <div class="party-label">Facturé à</div>
+      <div class="party-name">
+        {% if obj.client.company_name %}{{ obj.client.company_name }}{% else %}{{ obj.client.user.get_full_name }}{% endif %}
+      </div>
+      {% if obj.client.company_name %}<div class="party-line">{{ obj.client.user.get_full_name }}</div>{% endif %}
+      <div class="party-line">{{ obj.client.address|linebreaksbr }}</div>
+      <div class="party-line">{{ obj.client.user.email }}</div>
+      {% if obj.client.vat_number %}<div class="party-line">TVA : {{ obj.client.vat_number }}</div>{% endif %}
+    </div>
+  </div>
+
+  <!-- Meta -->
+  <div class="meta-box">
+    <div class="meta-item">
+      <div class="meta-label">Référence</div>
+      <div class="meta-value">{{ obj.reference }}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Date de facturation</div>
+      <div class="meta-value">{{ obj.created_at|date:"d/m/Y" }}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Échéance</div>
+      <div class="meta-value" style="{% if obj.is_overdue %}color:#dc2626;{% endif %}">
+        {{ obj.due_date|date:"d/m/Y" }}{% if obj.is_overdue %} ⚠{% endif %}
+      </div>
+    </div>
+    {% if obj.devis %}
+    <div class="meta-item">
+      <div class="meta-label">Devis lié</div>
+      <div class="meta-value">{{ obj.devis.reference }}</div>
+    </div>
+    {% endif %}
+    <div class="meta-item">
+      <div class="meta-label">Statut</div>
+      <div class="meta-value">
+        {% if obj.status == 'paid' %}
+          <span class="status-badge" style="background:#dcfce7;color:#166534">✓ {{ obj.get_status_display }}</span>
+        {% elif obj.status == 'overdue' %}
+          <span class="status-badge" style="background:#fee2e2;color:#dc2626">⚠ {{ obj.get_status_display }}</span>
+        {% elif obj.status == 'pending' %}
+          <span class="status-badge" style="background:#fef9c3;color:#854d0e">{{ obj.get_status_display }}</span>
+        {% else %}
+          <span class="status-badge" style="background:#f3f4f6;color:#6b7280">{{ obj.get_status_display }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Objet -->
+  <div style="margin-bottom:20px;">
+    <div style="font-size:14pt;font-weight:700;color:#14532d;margin-bottom:4px;">{{ obj.title }}</div>
+  </div>
+
+  <!-- Lignes -->
+  <table class="lines-table">
+    <thead>
+      <tr>
+        <th style="width:45%">Description</th>
+        <th class="right" style="width:10%">Qté</th>
+        <th class="right" style="width:15%">Prix unit. HTVA</th>
+        <th class="right" style="width:10%">TVA %</th>
+        <th class="right" style="width:12%">Total HTVA</th>
+        <th class="right" style="width:12%">Total TVAC</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ligne in lignes %}
+      <tr>
+        <td class="desc">{{ ligne.description }}</td>
+        <td class="right">{{ ligne.quantity }}</td>
+        <td class="right">{{ ligne.unit_price_excl }} €</td>
+        <td class="right">{{ ligne.vat_rate }}%</td>
+        <td class="right">{{ ligne.total_excl }} €</td>
+        <td class="right">{{ ligne.total_incl }} €</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px">Aucune ligne</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Totaux -->
+  <div class="totals-wrapper">
+    <table class="totals-table">
+      <tr>
+        <td>Sous-total HTVA</td>
+        <td>{{ obj.amount_excl }} €</td>
+      </tr>
+      <tr>
+        <td>TVA</td>
+        <td>{{ obj.total_vat }} €</td>
+      </tr>
+      <tr class="total-row">
+        <td>TOTAL TVAC</td>
+        <td>{{ obj.amount_incl }} €</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Paiement -->
+  <div class="notes-section">
+    <div class="notes-title">Instructions de paiement</div>
+    <div class="notes-text">
+      Veuillez effectuer le paiement avant le <strong>{{ obj.due_date|date:"d/m/Y" }}</strong>.<br>
+      Bénéficiaire : <strong>{{ company.name }}</strong><br>
+      IBAN : <strong>{{ company.iban }}</strong> — BIC : <strong>{{ company.bic }}</strong><br>
+      Communication : <strong>{{ obj.reference }}</strong><br><br>
+      En cas de retard de paiement, des intérêts de retard de 10% l'an ainsi qu'une indemnité forfaitaire
+      de 15% (min. 50 €) seront dus de plein droit et sans mise en demeure préalable.
+    </div>
+  </div>
+
+  {% if obj.status == 'paid' %}
+  <div style="text-align:center;margin:16px 0;">
+    <span style="border:3px solid #16a34a;color:#16a34a;font-size:18pt;font-weight:800;
+                 padding:6px 24px;border-radius:6px;display:inline-block;transform:rotate(-3deg)">
+      PAYÉE — {{ obj.paid_at|date:"d/m/Y" }}
+    </span>
+  </div>
+  {% endif %}
+
+  <div style="font-size:8pt;color:#9ca3af;text-align:center">
+    Document généré le {{ generated_at|date:"d/m/Y à H:i" }}
+  </div>
+
+</div>
+{% endblock %}

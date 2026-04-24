@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 10pt;
+      color: #1f2937;
+      background: #fff;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+      color: #fff;
+      padding: 28px 40px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .logo-block { flex: 1; }
+    .logo-name {
+      font-size: 22pt;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+    .logo-tagline {
+      font-size: 8pt;
+      color: #86efac;
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
+    .doc-type-block { text-align: right; }
+    .doc-type {
+      font-size: 20pt;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    .doc-ref {
+      font-size: 11pt;
+      color: #86efac;
+      margin-top: 4px;
+    }
+
+    /* ── Company info bar ── */
+    .company-bar {
+      background: #f0fdf4;
+      border-bottom: 1px solid #bbf7d0;
+      padding: 10px 40px;
+      font-size: 8pt;
+      color: #166534;
+      display: flex;
+      gap: 24px;
+    }
+    .company-bar span { display: inline-flex; align-items: center; gap: 4px; }
+
+    /* ── Body ── */
+    .body { padding: 32px 40px; }
+
+    /* ── Parties (émetteur / destinataire) ── */
+    .parties {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 28px;
+    }
+    .party { flex: 1; }
+    .party-label {
+      font-size: 7pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+    .party-name { font-size: 11pt; font-weight: 700; color: #14532d; margin-bottom: 3px; }
+    .party-line { font-size: 9pt; color: #374151; line-height: 1.5; }
+
+    /* ── Meta box ── */
+    .meta-box {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 14px 20px;
+      margin-bottom: 28px;
+      display: flex;
+      gap: 32px;
+    }
+    .meta-item {}
+    .meta-label {
+      font-size: 7pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #9ca3af;
+      margin-bottom: 3px;
+    }
+    .meta-value { font-size: 10pt; font-weight: 600; color: #111827; }
+
+    /* ── Status badge ── */
+    .status-badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Lines table ── */
+    .lines-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .lines-table thead tr {
+      background: #14532d;
+      color: #fff;
+    }
+    .lines-table thead th {
+      padding: 9px 12px;
+      text-align: left;
+      font-size: 8pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .lines-table thead th.right { text-align: right; }
+    .lines-table tbody tr { border-bottom: 1px solid #f3f4f6; }
+    .lines-table tbody tr:nth-child(even) { background: #f9fafb; }
+    .lines-table tbody td {
+      padding: 9px 12px;
+      font-size: 9.5pt;
+      vertical-align: top;
+    }
+    .lines-table tbody td.right { text-align: right; }
+    .lines-table tbody td.desc { color: #374151; }
+
+    /* ── Totals ── */
+    .totals-wrapper {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 32px;
+    }
+    .totals-table {
+      width: 260px;
+      border-collapse: collapse;
+    }
+    .totals-table tr td {
+      padding: 5px 12px;
+      font-size: 9.5pt;
+    }
+    .totals-table tr td:last-child { text-align: right; }
+    .totals-table tr.total-row {
+      background: #14532d;
+      color: #fff;
+      font-weight: 700;
+      font-size: 11pt;
+    }
+    .totals-table tr.total-row td { padding: 8px 12px; border-radius: 0; }
+
+    /* ── Notes / conditions ── */
+    .notes-section {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+    }
+    .notes-title {
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #166534;
+      margin-bottom: 6px;
+    }
+    .notes-text { font-size: 8.5pt; color: #374151; line-height: 1.6; }
+
+    /* ── Footer ── */
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      padding: 10px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 7.5pt;
+      color: #6b7280;
+    }
+    .footer-left { color: #166534; font-weight: 600; }
+    .footer-right { text-align: right; }
+
+    /* ── Page number ── */
+    .page-number::after { content: counter(page); }
+  </style>
+</head>
+<body>
+  {% block content %}{% endblock %}
+
+  <div class="footer">
+    <span class="footer-left">{{ company.name }} — {{ company.website }}</span>
+    <span>{{ company.address }}, {{ company.city }} | TVA {{ company.vat }}</span>
+    <span class="footer-right">{{ company.iban }} | {{ company.bic }}</span>
+  </div>
+</body>
+</html>

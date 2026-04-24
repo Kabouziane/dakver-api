@@ -1,0 +1,147 @@
+{% extends "pdf/base.html" %}
+{% block content %}
+
+<div class="header">
+  <div class="logo-block">
+    <div class="logo-name">ToitureVerte</div>
+    <div class="logo-tagline">Spécialiste Toiture Verte · Bruxelles &amp; Belgique</div>
+  </div>
+  <div class="doc-type-block">
+    <div class="doc-type">DEVIS</div>
+    <div class="doc-ref">{{ obj.reference }}</div>
+  </div>
+</div>
+
+<div class="company-bar">
+  <span>📞 {{ company.phone }}</span>
+  <span>✉ {{ company.email }}</span>
+  <span>🌐 {{ company.website }}</span>
+  <span>📍 {{ company.address }}, {{ company.city }}</span>
+</div>
+
+<div class="body">
+
+  <!-- Parties -->
+  <div class="parties">
+    <div class="party">
+      <div class="party-label">Émis par</div>
+      <div class="party-name">{{ company.name }}</div>
+      <div class="party-line">{{ company.address }}</div>
+      <div class="party-line">{{ company.city }}</div>
+      <div class="party-line">TVA : {{ company.vat }}</div>
+    </div>
+    <div class="party">
+      <div class="party-label">Destinataire</div>
+      <div class="party-name">
+        {% if obj.client.company_name %}{{ obj.client.company_name }}{% else %}{{ obj.client.user.get_full_name }}{% endif %}
+      </div>
+      {% if obj.client.company_name %}<div class="party-line">{{ obj.client.user.get_full_name }}</div>{% endif %}
+      <div class="party-line">{{ obj.client.address|linebreaksbr }}</div>
+      <div class="party-line">{{ obj.client.user.email }}</div>
+      {% if obj.client.phone %}<div class="party-line">{{ obj.client.phone }}</div>{% endif %}
+      {% if obj.client.vat_number %}<div class="party-line">TVA : {{ obj.client.vat_number }}</div>{% endif %}
+    </div>
+  </div>
+
+  <!-- Meta -->
+  <div class="meta-box">
+    <div class="meta-item">
+      <div class="meta-label">Référence</div>
+      <div class="meta-value">{{ obj.reference }}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Date d'émission</div>
+      <div class="meta-value">{{ obj.created_at|date:"d/m/Y" }}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Valable jusqu'au</div>
+      <div class="meta-value">{{ obj.valid_until|date:"d/m/Y" }}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Statut</div>
+      <div class="meta-value">
+        {% if obj.status == 'accepted' %}
+          <span class="status-badge" style="background:#dcfce7;color:#166534">{{ obj.get_status_display }}</span>
+        {% elif obj.status == 'refused' %}
+          <span class="status-badge" style="background:#fee2e2;color:#dc2626">{{ obj.get_status_display }}</span>
+        {% elif obj.status == 'sent' %}
+          <span class="status-badge" style="background:#dbeafe;color:#1d4ed8">{{ obj.get_status_display }}</span>
+        {% else %}
+          <span class="status-badge" style="background:#f3f4f6;color:#6b7280">{{ obj.get_status_display }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Objet -->
+  <div style="margin-bottom:20px;">
+    <div style="font-size:14pt;font-weight:700;color:#14532d;margin-bottom:6px;">{{ obj.title }}</div>
+    {% if obj.description %}
+    <div style="font-size:9pt;color:#374151;line-height:1.6;">{{ obj.description }}</div>
+    {% endif %}
+  </div>
+
+  <!-- Lignes -->
+  <table class="lines-table">
+    <thead>
+      <tr>
+        <th style="width:45%">Description</th>
+        <th class="right" style="width:10%">Qté</th>
+        <th class="right" style="width:15%">Prix unit. HTVA</th>
+        <th class="right" style="width:10%">TVA %</th>
+        <th class="right" style="width:12%">Total HTVA</th>
+        <th class="right" style="width:12%">Total TVAC</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ligne in lignes %}
+      <tr>
+        <td class="desc">{{ ligne.description }}</td>
+        <td class="right">{{ ligne.quantity }}</td>
+        <td class="right">{{ ligne.unit_price_excl }} €</td>
+        <td class="right">{{ ligne.vat_rate }}%</td>
+        <td class="right">{{ ligne.total_excl }} €</td>
+        <td class="right">{{ ligne.total_incl }} €</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px">Aucune ligne</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Totaux -->
+  <div class="totals-wrapper">
+    <table class="totals-table">
+      <tr>
+        <td>Sous-total HTVA</td>
+        <td>{{ obj.amount_excl }} €</td>
+      </tr>
+      <tr>
+        <td>TVA</td>
+        <td>{{ obj.total_vat }} €</td>
+      </tr>
+      <tr class="total-row">
+        <td>TOTAL TVAC</td>
+        <td>{{ obj.amount_incl }} €</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Conditions -->
+  <div class="notes-section">
+    <div class="notes-title">Conditions &amp; informations</div>
+    <div class="notes-text">
+      Ce devis est valable jusqu'au {{ obj.valid_until|date:"d/m/Y" }}. Pour accepter ce devis, veuillez nous retourner
+      ce document signé ou confirmer par email à {{ company.email }}.<br>
+      TVA 6% applicable pour les bâtiments de plus de 10 ans (art. 1, § 5, 3° ARRÊTÉ ROYAL n°20).
+      Dans le cas contraire, TVA 21% d'application.<br>
+      Acompte de 30% à la commande. Solde à réception des travaux.
+    </div>
+  </div>
+
+  <div style="font-size:8pt;color:#9ca3af;text-align:center">
+    Document généré le {{ generated_at|date:"d/m/Y à H:i" }}
+  </div>
+
+</div>
+{% endblock %}
