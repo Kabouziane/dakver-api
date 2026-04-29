@@ -122,7 +122,7 @@ class DashboardView(mixins.ListModelMixin, viewsets.GenericViewSet):
                 client.prestations.filter(status='active'), many=True
             ).data,
             'recent_invoices': FactureSerializer(
-                client.factures.order_by('-created_at')[:5],
+                client.factures.prefetch_related('lignes').order_by('-created_at')[:5],
                 many=True,
                 context={'request': request},
             ).data,

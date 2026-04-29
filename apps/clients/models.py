@@ -1,7 +1,10 @@
+import logging
 from decimal import Decimal
 from django.db import models, transaction
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -71,6 +74,10 @@ class Devis(models.Model):
         verbose_name = 'Devis'
         verbose_name_plural = 'Devis'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['client', 'status'], name='devis_client_status_idx'),
+            models.Index(fields=['client', '-created_at'], name='devis_client_date_idx'),
+        ]
 
     def __str__(self):
         return f"{self.reference} — {self.client}"
@@ -109,6 +116,10 @@ class DevisLigne(models.Model):
 
     class Meta:
         ordering = ['order', 'id']
+        constraints = [
+            models.CheckConstraint(check=models.Q(quantity__gt=0), name='devis_ligne_quantity_positive'),
+            models.CheckConstraint(check=models.Q(unit_price_excl__gte=0), name='devis_ligne_price_non_negative'),
+        ]
 
     def __str__(self):
         return self.description
@@ -155,6 +166,11 @@ class Facture(models.Model):
         verbose_name = 'Facture'
         verbose_name_plural = 'Factures'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['client', 'status'], name='facture_client_status_idx'),
+            models.Index(fields=['client', 'due_date'], name='facture_client_due_date_idx'),
+            models.Index(fields=['client', '-created_at'], name='facture_client_date_idx'),
+        ]
 
     def __str__(self):
         return f"{self.reference} — {self.client}"
@@ -193,6 +209,8 @@ class Facture(models.Model):
         """
         if self.status == self.STATUS_PAID:
             return
+        if self.amount_incl == Decimal('0.00'):
+            logger.warning("mark_as_paid sur %s avec montant 0 — aucune ligne ?", self.reference)
         self.status = self.STATUS_PAID
         self.paid_at = timezone.now()
         self.save(update_fields=['status', 'paid_at', 'updated_at'])
@@ -214,6 +232,10 @@ class FactureLigne(models.Model):
 
     class Meta:
         ordering = ['order', 'id']
+        constraints = [
+            models.CheckConstraint(check=models.Q(quantity__gt=0), name='facture_ligne_quantity_positive'),
+            models.CheckConstraint(check=models.Q(unit_price_excl__gte=0), name='facture_ligne_price_non_negative'),
+        ]
 
     def __str__(self):
         return self.description
@@ -259,6 +281,9 @@ class Maintenance(models.Model):
         verbose_name = 'Maintenance'
         verbose_name_plural = 'Maintenances'
         ordering = ['scheduled_at']
+        indexes = [
+            models.Index(fields=['client', 'status', 'scheduled_at'], name='maint_client_status_date_idx'),
+        ]
 
     def __str__(self):
         return f"{self.title} — {self.client} ({self.scheduled_at.strftime('%d/%m/%Y')})"
@@ -287,6 +312,9 @@ class Prestation(models.Model):
         verbose_name = 'Prestation'
         verbose_name_plural = 'Prestations'
         ordering = ['-start_date']
+        indexes = [
+            models.Index(fields=['client', 'status'], name='prestation_client_status_idx'),
+        ]
 
     def __str__(self):
         return f"{self.name} — {self.client}"
@@ -308,6 +336,9 @@ class CompteTransaction(models.Model):
         verbose_name = 'Transaction'
         verbose_name_plural = 'Transactions'
         ordering = ['-date']
+        indexes = [
+            models.Index(fields=['client', '-date'], name='transaction_client_date_idx'),
+        ]
 
     def __str__(self):
         sign = '+' if self.amount >= 0 else ''

@@ -1,3 +1,5 @@
+import re
+from decimal import Decimal
 from rest_framework import serializers
 from .models import (
     Client, Devis, DevisLigne, Facture, FactureLigne,
@@ -18,6 +20,16 @@ class ClientSerializer(serializers.ModelSerializer):
                   'phone', 'address', 'vat_number', 'balance', 'unpaid_amount', 'created_at']
         read_only_fields = ['id', 'email', 'created_at', 'balance', 'unpaid_amount']
 
+    def validate_phone(self, value):
+        if value and not re.match(r'^[\d\s\+\-\(\)\.]{7,20}$', value):
+            raise serializers.ValidationError("Format de téléphone invalide.")
+        return value
+
+    def validate_vat_number(self, value):
+        if value and not re.match(r'^(BE\s?)?\d{4}\.\d{3}\.\d{3}$', value.strip()):
+            raise serializers.ValidationError("Format TVA invalide (ex: BE 0123.456.789).")
+        return value
+
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user', {})
         if user_data:
@@ -37,6 +49,16 @@ class DevisLigneSerializer(serializers.ModelSerializer):
         model = DevisLigne
         fields = ['id', 'description', 'quantity', 'unit_price_excl', 'vat_rate',
                   'total_excl', 'vat_amount', 'total_incl', 'order']
+
+    def validate_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("La quantité doit être supérieure à 0.")
+        return value
+
+    def validate_unit_price_excl(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Le prix unitaire ne peut pas être négatif.")
+        return value
 
 
 class DevisSerializer(serializers.ModelSerializer):
@@ -70,6 +92,16 @@ class FactureLigneSerializer(serializers.ModelSerializer):
         model = FactureLigne
         fields = ['id', 'description', 'quantity', 'unit_price_excl', 'vat_rate',
                   'total_excl', 'vat_amount', 'total_incl', 'order']
+
+    def validate_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("La quantité doit être supérieure à 0.")
+        return value
+
+    def validate_unit_price_excl(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Le prix unitaire ne peut pas être négatif.")
+        return value
 
 
 class FactureSerializer(serializers.ModelSerializer):
