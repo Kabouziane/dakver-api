@@ -1,9 +1,10 @@
 from decimal import Decimal
 from django.utils import timezone
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import (
     Client, Devis, Facture, Maintenance, Prestation, CompteTransaction
@@ -13,6 +14,7 @@ from .serializers import (
     MaintenanceSerializer, PrestationSerializer, CompteTransactionSerializer,
     DashboardSerializer
 )
+from .vies import check_vat
 
 
 class ClientViewSet(mixins.RetrieveModelMixin,
@@ -97,6 +99,40 @@ class CompteViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         return CompteTransaction.objects.filter(client=self.request.user.client)
+
+
+class VatValidateView(APIView):
+    """
+    GET /api/v1/vat/validate/?number=BE0123456789
+    Valide un numéro de TVA via l'API VIES (Commission Européenne).
+    Retourne les données entreprise si disponibles.
+    Authentification requise — évite l'abus de l'endpoint comme proxy public.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        number = request.query_params.get('number', '').strip()
+        if not number:
+            return Response(
+                {'valid': False, 'error': 'Paramètre number requis.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        result = check_vat(number)
+
+        payload = {
+            'valid':       result.valid,
+            'name':        result.name,
+            'address':     result.address,
+            'unavailable': result.unavailable,
+            'error':       result.error,
+        }
+
+        if result.unavailable:
+            # VIES down : on répond 503 pour que le client puisse l'ignorer gracieusement
+            return Response(payload, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        return Response(payload)
 
 
 class DashboardView(mixins.ListModelMixin, viewsets.GenericViewSet):

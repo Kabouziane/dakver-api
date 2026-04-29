@@ -2,7 +2,8 @@ from rest_framework.routers import DefaultRouter
 from django.urls import path
 from .views import (
     ClientViewSet, DevisViewSet, FactureViewSet,
-    MaintenanceViewSet, PrestationViewSet, CompteViewSet, DashboardView
+    MaintenanceViewSet, PrestationViewSet, CompteViewSet, DashboardView,
+    VatValidateView,
 )
 
 router = DefaultRouter()
@@ -14,4 +15,6 @@ router.register('prestations', PrestationViewSet, basename='prestations')
 router.register('compte',      CompteViewSet,     basename='compte')
 router.register('dashboard',   DashboardView,     basename='dashboard')
 
-urlpatterns = router.urls
+urlpatterns = router.urls + [
+    path('vat/validate/', VatValidateView.as_view(), name='vat-validate'),
+]
