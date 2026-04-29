@@ -5,7 +5,6 @@ from .models import (
     Client, Devis, DevisLigne, Facture, FactureLigne,
     Maintenance, Prestation, CompteTransaction
 )
-from .vies import check_vat
 
 
 class ClientSerializer(serializers.ModelSerializer):
@@ -29,14 +28,9 @@ class ClientSerializer(serializers.ModelSerializer):
     def validate_vat_number(self, value):
         if not value:
             return value
-        result = check_vat(value)
-        if result.unavailable:
-            # VIES est down : on laisse passer avec un avertissement mais on ne bloque pas
-            return value
-        if not result.valid:
-            raise serializers.ValidationError(
-                result.error or "Numéro TVA non valide."
-            )
+        from .vies import normalize_vat
+        if not normalize_vat(value):
+            raise serializers.ValidationError("Format TVA invalide (ex: BE 0123.456.789).")
         return value
 
     def update(self, instance, validated_data):
